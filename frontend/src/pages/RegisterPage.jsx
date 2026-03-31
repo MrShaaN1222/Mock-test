@@ -3,11 +3,12 @@ import { useDispatch, useSelector } from "react-redux";
 import { Link, Navigate } from "react-router-dom";
 import ErrorState from "../components/common/ErrorState";
 import LoadingSpinner from "../components/common/LoadingSpinner";
-import { loginThunk } from "../features/auth/authSlice";
+import { registerThunk } from "../features/auth/authSlice";
 
-export default function LoginPage() {
+export default function RegisterPage() {
   const dispatch = useDispatch();
   const { accessToken, status, error } = useSelector((state) => state.auth);
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
@@ -17,13 +18,20 @@ export default function LoginPage() {
 
   async function onSubmit(event) {
     event.preventDefault();
-    await dispatch(loginThunk({ email, password }));
+    await dispatch(registerThunk({ name, email, password }));
   }
 
   return (
     <section style={{ maxWidth: "420px" }}>
-      <h2>Login</h2>
+      <h2>Student Registration</h2>
       <form onSubmit={onSubmit} style={{ display: "grid", gap: "10px" }}>
+        <input
+          type="text"
+          placeholder="Full name"
+          value={name}
+          onChange={(event) => setName(event.target.value)}
+          required
+        />
         <input
           type="email"
           placeholder="Email"
@@ -39,13 +47,13 @@ export default function LoginPage() {
           required
         />
         <button type="submit" disabled={status === "loading"}>
-          {status === "loading" ? "Signing in..." : "Sign In"}
+          {status === "loading" ? "Creating account..." : "Create Student Account"}
         </button>
       </form>
       <p style={{ marginTop: "10px" }}>
-        New student? <Link to="/register">Create account</Link>
+        Already have an account? <Link to="/login">Login</Link>
       </p>
-      {status === "loading" && <LoadingSpinner label="Authenticating..." />}
+      {status === "loading" && <LoadingSpinner label="Registering..." />}
       {error && <ErrorState message={error} />}
     </section>
   );

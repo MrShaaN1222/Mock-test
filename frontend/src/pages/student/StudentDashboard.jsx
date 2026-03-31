@@ -25,14 +25,35 @@ export default function StudentDashboard() {
       </p>
       {status === "loading" && <LoadingSpinner label="Loading exams..." />}
       {error && <ErrorState message={error} />}
-      <ul>
-        {exams.map((exam) => (
-          <li key={exam._id || exam.id}>
-            {exam.title} - {exam.durationMinutes} min
-            {" | "}
-            <Link to={`/student/exam/${exam._id || exam.id}/instructions`}>Start / Instructions</Link>
-          </li>
-        ))}
+      {status === "succeeded" && exams.length === 0 && (
+        <p>No published exams available yet. Ask admin to publish an exam.</p>
+      )}
+      <ul style={{ display: "grid", gap: "10px", paddingLeft: "18px" }}>
+        {exams.map((exam) => {
+          const examId = exam._id || exam.id;
+          return (
+            <li key={examId || exam.title}>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  gap: "10px",
+                  flexWrap: "wrap"
+                }}
+              >
+                <div>
+                  <strong>{exam.title}</strong> - {exam.durationMinutes} min
+                </div>
+                {examId ? (
+                  <Link to={`/student/exam/${examId}/instructions`}>Start / Instructions</Link>
+                ) : (
+                  <span>Exam unavailable</span>
+                )}
+              </div>
+            </li>
+          );
+        })}
       </ul>
     </section>
   );
