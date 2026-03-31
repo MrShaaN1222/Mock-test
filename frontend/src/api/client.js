@@ -1,19 +1,23 @@
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
 
 async function request(path, options = {}) {
+  const { headers: optionHeaders = {}, ...restOptions } = options;
+
   const response = await fetch(`${API_BASE_URL}${path}`, {
+    ...restOptions,
     headers: {
       "Content-Type": "application/json",
-      ...(options.headers || {})
-    },
-    ...options
+      ...optionHeaders
+    }
   });
 
   const contentType = response.headers.get("content-type") || "";
   const body = contentType.includes("application/json") ? await response.json() : null;
 
   if (!response.ok) {
-    throw new Error(body?.message || "API request failed");
+    const detailValues = body?.details && typeof body.details === "object" ? Object.values(body.details) : [];
+    const firstDetailMessage = detailValues.find((item) => item?.message)?.message;
+    throw new Error(firstDetailMessage || body?.message || "API request failed");
   }
 
   return body;

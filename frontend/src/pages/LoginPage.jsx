@@ -7,12 +7,12 @@ import { loginThunk } from "../features/auth/authSlice";
 
 export default function LoginPage() {
   const dispatch = useDispatch();
-  const { accessToken, status, error } = useSelector((state) => state.auth);
+  const { accessToken, user, status, error } = useSelector((state) => state.auth);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
   if (accessToken) {
-    return <Navigate to="/student" replace />;
+    return <Navigate to={user?.role === "admin" ? "/admin" : "/student"} replace />;
   }
 
   async function onSubmit(event) {

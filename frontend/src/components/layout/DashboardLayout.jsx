@@ -25,8 +25,7 @@ export default function DashboardLayout() {
           </span>
         </div>
         <nav style={{ display: "flex", gap: "12px", alignItems: "center" }}>
-          <Link to="/student">Student</Link>
-          <Link to="/admin">Admin</Link>
+          {user?.role === "admin" ? <Link to="/admin">Admin</Link> : <Link to="/student">Student</Link>}
           <button type="button" onClick={() => dispatch(logout())}>
             Logout
           </button>
