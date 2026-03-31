@@ -13,6 +13,8 @@
     "seed:admin": "node src/seeds/admin.seed.js",
     "seed:questions": "node src/seeds/questions.seed.js",
     "seed:questions:reset": "node src/seeds/questions.seed.js --reset",
+    "import:questions": "node src/seeds/questions.import.js",
+    "import:exams": "node src/seeds/exams.import.js",
     "seed": "npm run seed:admin && npm run seed:questions",
     "seed:reset": "npm run seed:questions:reset"
   },

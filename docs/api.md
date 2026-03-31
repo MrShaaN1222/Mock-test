@@ -35,9 +35,12 @@ Requires **admin** JWT.
 |--------|------|
 | `GET` | `/questions` |
 | `GET` | `/questions/:id` |
+| `POST` | `/questions/import` |
 | `POST` | `/questions` |
 | `PUT` | `/questions/:id` |
 | `DELETE` | `/questions/:id` |
+
+**Import body:** JSON array of question objects, or `{ "replace": false, "items": [ ... ] }`. If `replace` is `true`, all questions are deleted before insert. Optional query: `?replace=true`.
 
 **List query params:** `page`, `limit` (default page `1`, limit `20`, max `100`), `category`, `difficulty`, `isActive` (`true` / `false`).
 
@@ -81,9 +84,12 @@ Requires **admin** JWT.
 |--------|------|
 | `GET` | `/admin/exams` |
 | `GET` | `/admin/exams/:id` |
+| `POST` | `/admin/exams/import` |
 | `POST` | `/admin/exams` |
 | `PUT` | `/admin/exams/:id` |
 | `DELETE` | `/admin/exams/:id` |
+
+**Import body:** JSON array of exam objects, or `{ "replace": false, "items": [ ... ] }`. If `replace` is `true`, all exams are deleted before insert. `createdBy` is set from the admin JWT. Optional query: `?replace=true`.
 
 **List query params:** `page`, `limit`, `isPublished` (`true` / `false`).
 

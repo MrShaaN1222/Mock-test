@@ -3,6 +3,7 @@ import {
   createQuestion,
   deleteQuestion,
   getQuestionById,
+  importQuestions,
   listQuestions,
   updateQuestion
 } from "../controllers/questionController.js";
@@ -13,6 +14,7 @@ const questionRouter = Router();
 
 questionRouter.use(authMiddleware, roleMiddleware("admin"));
 
+questionRouter.post("/import", importQuestions);
 questionRouter.get("/", listQuestions);
 questionRouter.get("/:id", getQuestionById);
 questionRouter.post("/", createQuestion);

@@ -1,0 +1,28 @@
+[
+  {
+    "questionText": "What is 15% of 240?",
+    "category": "quantitative",
+    "difficulty": "easy",
+    "isActive": true,
+    "options": [
+      { "text": "24", "isCorrect": false },
+      { "text": "30", "isCorrect": false },
+      { "text": "36", "isCorrect": true },
+      { "text": "42", "isCorrect": false }
+    ],
+    "explanation": "15% of 240 equals 36."
+  },
+  {
+    "questionText": "CPU stands for?",
+    "category": "computer",
+    "difficulty": "easy",
+    "isActive": true,
+    "options": [
+      { "text": "Central Process Unit", "isCorrect": false },
+      { "text": "Central Processing Unit", "isCorrect": true },
+      { "text": "Computer Processing Unit", "isCorrect": false },
+      { "text": "Control Processing Unit", "isCorrect": false }
+    ],
+    "explanation": "CPU means Central Processing Unit."
+  }
+]

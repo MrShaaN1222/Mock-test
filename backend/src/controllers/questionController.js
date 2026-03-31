@@ -1,7 +1,14 @@
 import mongoose from "mongoose";
 import Question from "../models/Question.js";
 import ApiError from "../utils/ApiError.js";
+import { bulkImportQuestions } from "../services/bulkImportService.js";
 import { parseBooleanQuery, parsePagination, sanitizeText } from "../utils/request.js";
+
+function extractImportRecords(body) {
+  if (Array.isArray(body)) return body;
+  if (body && Array.isArray(body.items)) return body.items;
+  return null;
+}
 
 export async function createQuestion(req, res, next) {
   try {
@@ -104,6 +111,27 @@ export async function updateQuestion(req, res, next) {
     }
 
     return res.status(200).json(question);
+  } catch (error) {
+    return next(error);
+  }
+}
+
+export async function importQuestions(req, res, next) {
+  try {
+    const records = extractImportRecords(req.body);
+    if (!records) {
+      throw new ApiError(400, "Send a JSON array or { \"items\": [...], \"replace\": false }");
+    }
+    const replace =
+      (typeof req.body === "object" && req.body !== null && !Array.isArray(req.body) && req.body.replace === true) ||
+      req.query.replace === "true";
+
+    const result = await bulkImportQuestions(records, { replace });
+    return res.status(201).json({
+      message: "Questions imported",
+      insertedCount: result.insertedCount,
+      replacedAll: replace
+    });
   } catch (error) {
     return next(error);
   }

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useSelector } from "react-redux";
 import { apiClient, withAuth } from "../../api/client";
 import LoadingSpinner from "../../components/common/LoadingSpinner";
@@ -28,6 +28,8 @@ export default function QuestionManager() {
   const [status, setStatus] = useState("idle");
   const [error, setError] = useState("");
   const [toast, setToast] = useState(null);
+  const [importReplace, setImportReplace] = useState(false);
+  const questionImportInputRef = useRef(null);
 
   useEffect(() => {
     if (!accessToken) return;
@@ -137,6 +139,52 @@ export default function QuestionManager() {
     });
   }
 
+  async function handleQuestionImportFile(event) {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file || !accessToken) return;
+
+    let parsed;
+    try {
+      parsed = JSON.parse(await file.text());
+    } catch {
+      setToast({ type: "error", message: "Invalid JSON file" });
+      return;
+    }
+
+    let items;
+    let fromFileReplace = false;
+    if (Array.isArray(parsed)) {
+      items = parsed;
+    } else if (parsed && Array.isArray(parsed.items)) {
+      items = parsed.items;
+      fromFileReplace = Boolean(parsed.replace);
+    } else {
+      setToast({ type: "error", message: "JSON must be an array or { items: [...] }" });
+      return;
+    }
+
+    const replace = importReplace || fromFileReplace;
+    if (replace) {
+      const ok = window.confirm("Replace ALL existing questions before import? This cannot be undone.");
+      if (!ok) return;
+    }
+    try {
+      const result = await apiClient.post(
+        "/questions/import",
+        { replace, items },
+        withAuth(accessToken)
+      );
+      setToast({
+        type: "success",
+        message: `Imported ${result.insertedCount} question(s)${replace ? " (replaced all first)" : ""}`
+      });
+      fetchQuestions();
+    } catch (err) {
+      setToast({ type: "error", message: err.message || "Import failed" });
+    }
+  }
+
   async function handleDelete(questionId) {
     const confirmed = window.confirm("Delete this question?");
     if (!confirmed) return;
@@ -182,6 +230,24 @@ export default function QuestionManager() {
         </select>
         <button type="button" onClick={fetchQuestions}>
           Apply filters
+        </button>
+        <input
+          ref={questionImportInputRef}
+          type="file"
+          accept="application/json,.json"
+          style={{ display: "none" }}
+          onChange={handleQuestionImportFile}
+        />
+        <label style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
+          <input
+            type="checkbox"
+            checked={importReplace}
+            onChange={(event) => setImportReplace(event.target.checked)}
+          />
+          Replace all on import
+        </label>
+        <button type="button" onClick={() => questionImportInputRef.current?.click()}>
+          Import questions (JSON)
         </button>
       </div>
 

@@ -1,0 +1,22 @@
+[
+  {
+    "title": "Mixed Mock Test 100",
+    "description": "Balanced practice test",
+    "categories": ["quantitative", "english", "general-awareness", "reasoning"],
+    "totalQuestions": 12,
+    "durationMinutes": 60,
+    "marksPerQuestion": 2,
+    "negativeMarks": 0.5,
+    "isPublished": true
+  },
+  {
+    "title": "Computer Basics Mini Test",
+    "description": "Starter test for computer basics",
+    "categories": ["computer"],
+    "totalQuestions": 1,
+    "durationMinutes": 10,
+    "marksPerQuestion": 2,
+    "negativeMarks": 0.5,
+    "isPublished": true
+  }
+]

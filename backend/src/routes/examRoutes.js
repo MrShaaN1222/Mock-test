@@ -3,6 +3,7 @@ import {
   createExam,
   deleteExam,
   getExamById,
+  importExams,
   listExams,
   updateExam
 } from "../controllers/examController.js";
@@ -13,6 +14,7 @@ const examRouter = Router();
 
 examRouter.use(authMiddleware, roleMiddleware("admin"));
 
+examRouter.post("/import", importExams);
 examRouter.get("/", listExams);
 examRouter.get("/:id", getExamById);
 examRouter.post("/", createExam);

@@ -20,6 +20,8 @@
     "seed:admin": "npm run seed:admin --workspace backend",
     "seed:questions": "npm run seed:questions --workspace backend",
     "seed:questions:reset": "npm run seed:questions:reset --workspace backend",
+    "import:questions": "npm run import:questions --workspace backend",
+    "import:exams": "npm run import:exams --workspace backend",
     "seed:reset": "npm run seed:reset --workspace backend"
   },
   "devDependencies": {

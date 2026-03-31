@@ -54,6 +54,10 @@ Backend seeding (same commands work from repo root via shortcuts below):
 | `npm run seed:admin` | Creates or updates only the admin user (idempotent). |
 | `npm run seed:questions` | Deletes existing questions and inserts the sample question set. |
 | `npm run seed:questions:reset` | Deletes all questions only (does not insert). |
+| `npm run import:questions` | Imports questions from JSON file (`backend/src/seeds/data/questions.import.sample.json` by default). |
+| `npm run import:exams` | Imports exams from JSON file (`backend/src/seeds/data/exams.import.sample.json` by default). |
+
+In the admin UI you can also use **Import questions (JSON)** and **Import exams (JSON)** on `/admin/questions` and `/admin/exams` (same JSON formats as the CLI import).
 | `npm run seed:reset` | Alias for `seed:questions:reset`. |
 
 From repository root, shortcuts:
@@ -62,6 +66,8 @@ From repository root, shortcuts:
 - `npm run seed:admin`
 - `npm run seed:questions`
 - `npm run seed:questions:reset`
+- `npm run import:questions`
+- `npm run import:exams`
 - `npm run seed:reset`
 
 ## Local Development Workflow
