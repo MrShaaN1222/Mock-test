@@ -36,7 +36,7 @@ export default function UserManager() {
       if (filters.isBlocked !== "") params.set("isBlocked", filters.isBlocked);
       const query = params.toString() ? `?${params.toString()}` : "";
       const data = await apiClient.get(`/users${query}`, withAuth(accessToken));
-      setUsers(data || []);
+      setUsers(data.items || data || []);
       setStatus("succeeded");
     } catch (err) {
       setError(err.message || "Failed to load users");

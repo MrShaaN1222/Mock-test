@@ -1,10 +1,17 @@
 import {
+  getAttemptAnalytics,
+  getAttemptHistory,
   getExamStartData,
   listPublishedExams,
   saveAttemptProgress,
   startAttempt,
   submitAttempt
 } from "../services/attemptService.js";
+import {
+  validateAttemptSavePayload,
+  validateAttemptStartPayload,
+  validateAttemptSubmitPayload
+} from "../utils/validators.js";
 
 export async function listAvailableExams(req, res, next) {
   try {
@@ -29,6 +36,7 @@ export async function startExamView(req, res, next) {
 
 export async function startAttemptController(req, res, next) {
   try {
+    validateAttemptStartPayload(req.body);
     const result = await startAttempt({
       examId: req.body.examId,
       userId: req.user.sub
@@ -41,6 +49,7 @@ export async function startAttemptController(req, res, next) {
 
 export async function saveAttemptController(req, res, next) {
   try {
+    validateAttemptSavePayload(req.body);
     const result = await saveAttemptProgress({
       attemptId: req.body.attemptId,
       userId: req.user.sub,
@@ -58,8 +67,32 @@ export async function saveAttemptController(req, res, next) {
 
 export async function submitAttemptController(req, res, next) {
   try {
+    validateAttemptSubmitPayload(req.body);
     const result = await submitAttempt({
       attemptId: req.body.attemptId,
+      userId: req.user.sub
+    });
+    return res.status(200).json(result);
+  } catch (error) {
+    return next(error);
+  }
+}
+
+export async function attemptHistoryController(req, res, next) {
+  try {
+    const result = await getAttemptHistory({
+      userId: req.user.sub,
+      query: req.query
+    });
+    return res.status(200).json(result);
+  } catch (error) {
+    return next(error);
+  }
+}
+
+export async function attemptAnalyticsController(req, res, next) {
+  try {
+    const result = await getAttemptAnalytics({
       userId: req.user.sub
     });
     return res.status(200).json(result);

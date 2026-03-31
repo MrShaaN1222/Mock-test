@@ -50,7 +50,7 @@ export default function QuestionManager() {
       if (filters.isActive !== "") params.set("isActive", filters.isActive);
       const query = params.toString() ? `?${params.toString()}` : "";
       const data = await apiClient.get(`/questions${query}`, withAuth(accessToken));
-      setQuestions(data || []);
+      setQuestions(data.items || data || []);
       setStatus("succeeded");
     } catch (err) {
       setError(err.message || "Failed to load questions");

@@ -3,6 +3,7 @@ import Attempt from "../models/Attempt.js";
 import Exam from "../models/Exam.js";
 import Question from "../models/Question.js";
 import ApiError from "../utils/ApiError.js";
+import { parsePagination } from "../utils/request.js";
 
 function shuffleArray(items) {
   const copy = [...items];
@@ -48,6 +49,35 @@ function summarizeAttempt(attempt, exam) {
     totalTimeSpentSeconds: attempt.totalTimeSpentSeconds,
     snapshot: toStudentSnapshot(attempt.snapshot)
   };
+}
+
+export function calculateAttemptMetrics(snapshot, marksPerQuestion, negativeMarks) {
+  let totalCorrect = 0;
+  let totalWrong = 0;
+  let totalUnanswered = 0;
+
+  for (const item of snapshot) {
+    if (!item.selectedOptionId) {
+      totalUnanswered += 1;
+      continue;
+    }
+
+    const selected = item.options.find((option) => option.optionId === item.selectedOptionId);
+    if (!selected) {
+      totalUnanswered += 1;
+      continue;
+    }
+
+    if (selected.isCorrect) {
+      totalCorrect += 1;
+    } else {
+      totalWrong += 1;
+    }
+  }
+
+  const score = Number((totalCorrect * marksPerQuestion - totalWrong * negativeMarks).toFixed(2));
+
+  return { score, totalCorrect, totalWrong, totalUnanswered };
 }
 
 export async function autoSubmitIfExpired(attempt, exam) {
@@ -263,35 +293,16 @@ export async function submitAttempt({ attemptId, userId, forceExpiredStatus = fa
     return summarizeAttempt(attempt, exam);
   }
 
-  let totalCorrect = 0;
-  let totalWrong = 0;
-  let totalUnanswered = 0;
-
-  for (const item of attempt.snapshot) {
-    if (!item.selectedOptionId) {
-      totalUnanswered += 1;
-      continue;
-    }
-
-    const selected = item.options.find((option) => option.optionId === item.selectedOptionId);
-    if (!selected) {
-      totalUnanswered += 1;
-      continue;
-    }
-
-    if (selected.isCorrect) {
-      totalCorrect += 1;
-    } else {
-      totalWrong += 1;
-    }
-  }
-
-  const score = totalCorrect * exam.marksPerQuestion - totalWrong * exam.negativeMarks;
+  const { score, totalCorrect, totalWrong, totalUnanswered } = calculateAttemptMetrics(
+    attempt.snapshot,
+    exam.marksPerQuestion,
+    exam.negativeMarks
+  );
 
   attempt.totalCorrect = totalCorrect;
   attempt.totalWrong = totalWrong;
   attempt.totalUnanswered = totalUnanswered;
-  attempt.score = Number(score.toFixed(2));
+  attempt.score = score;
   attempt.totalTimeSpentSeconds = attempt.snapshot.reduce(
     (sum, item) => sum + (item.timeSpentSeconds || 0),
     0
@@ -302,4 +313,125 @@ export async function submitAttempt({ attemptId, userId, forceExpiredStatus = fa
   await attempt.save();
 
   return summarizeAttempt(attempt, exam);
+}
+
+export async function getAttemptHistory({ userId, query }) {
+  const { page, limit, skip } = parsePagination(query, { page: 1, limit: 10, maxLimit: 50 });
+  const baseFilter = {
+    user: userId,
+    status: { $in: ["submitted", "expired"] }
+  };
+
+  const [items, total] = await Promise.all([
+    Attempt.find(baseFilter)
+      .sort({ submittedAt: -1, createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .populate("exam", "title categories totalQuestions marksPerQuestion")
+      .lean(),
+    Attempt.countDocuments(baseFilter)
+  ]);
+
+  return {
+    items: items.map((attempt) => {
+      const totalQuestions = attempt.snapshot?.length || attempt.exam?.totalQuestions || 0;
+      const maxScore = totalQuestions * (attempt.exam?.marksPerQuestion || 0);
+      return {
+        id: attempt._id,
+        examId: attempt.exam?._id,
+        title: attempt.exam?.title || "Exam",
+        categories: attempt.exam?.categories || [],
+        score: attempt.score,
+        maxScore,
+        totalCorrect: attempt.totalCorrect,
+        totalWrong: attempt.totalWrong,
+        totalUnanswered: attempt.totalUnanswered,
+        totalTimeSpentSeconds: attempt.totalTimeSpentSeconds,
+        status: attempt.status,
+        submittedAt: attempt.submittedAt || attempt.updatedAt
+      };
+    }),
+    pagination: {
+      page,
+      limit,
+      total,
+      totalPages: Math.ceil(total / limit) || 1
+    }
+  };
+}
+
+export async function getAttemptAnalytics({ userId }) {
+  const attempts = await Attempt.find({
+    user: userId,
+    status: { $in: ["submitted", "expired"] }
+  })
+    .sort({ submittedAt: -1, createdAt: -1 })
+    .populate("exam", "title categories totalQuestions marksPerQuestion")
+    .lean();
+
+  const trend = attempts.slice(0, 10).reverse().map((attempt) => {
+    const totalQuestions = attempt.snapshot?.length || attempt.exam?.totalQuestions || 0;
+    return {
+      id: attempt._id,
+      title: attempt.exam?.title || "Exam",
+      score: attempt.score,
+      maxScore: totalQuestions * (attempt.exam?.marksPerQuestion || 0),
+      submittedAt: attempt.submittedAt || attempt.updatedAt
+    };
+  });
+
+  const correctness = attempts.reduce(
+    (acc, attempt) => {
+      acc.correct += attempt.totalCorrect || 0;
+      acc.wrong += attempt.totalWrong || 0;
+      acc.unanswered += attempt.totalUnanswered || 0;
+      return acc;
+    },
+    { correct: 0, wrong: 0, unanswered: 0 }
+  );
+
+  const totalTimeSpentSeconds = attempts.reduce((sum, attempt) => sum + (attempt.totalTimeSpentSeconds || 0), 0);
+  const averageScore = attempts.length
+    ? Number((attempts.reduce((sum, attempt) => sum + (attempt.score || 0), 0) / attempts.length).toFixed(2))
+    : 0;
+
+  const questionIds = [
+    ...new Set(
+      attempts.flatMap((attempt) => (attempt.snapshot || []).map((item) => item.questionId?.toString()).filter(Boolean))
+    )
+  ];
+  const questions = questionIds.length
+    ? await Question.find({ _id: { $in: questionIds } }).select("_id category").lean()
+    : [];
+  const categoryMap = new Map(questions.map((item) => [item._id.toString(), item.category || "Uncategorized"]));
+
+  const sectionBuckets = new Map();
+  for (const attempt of attempts) {
+    for (const item of attempt.snapshot || []) {
+      const category = categoryMap.get(item.questionId?.toString()) || "Uncategorized";
+      const selected = (item.options || []).find((option) => option.optionId === item.selectedOptionId);
+      const bucket = sectionBuckets.get(category) || { category, correct: 0, wrong: 0, unanswered: 0, timeSpent: 0 };
+      if (!item.selectedOptionId || !selected) {
+        bucket.unanswered += 1;
+      } else if (selected.isCorrect) {
+        bucket.correct += 1;
+      } else {
+        bucket.wrong += 1;
+      }
+      bucket.timeSpent += item.timeSpentSeconds || 0;
+      sectionBuckets.set(category, bucket);
+    }
+  }
+
+  return {
+    attemptsCount: attempts.length,
+    averageScore,
+    correctness,
+    scoreTrend: trend,
+    sectionWiseStats: [...sectionBuckets.values()],
+    timeSpentSummary: {
+      totalSeconds: totalTimeSpentSeconds,
+      averageSecondsPerAttempt: attempts.length ? Math.round(totalTimeSpentSeconds / attempts.length) : 0
+    }
+  };
 }

@@ -20,6 +20,9 @@ export default function StudentDashboard() {
     <section>
       <h2>Student Dashboard</h2>
       <p>Available exams</p>
+      <p>
+        <Link to="/student/analytics">View performance analytics</Link>
+      </p>
       {status === "loading" && <LoadingSpinner label="Loading exams..." />}
       {error && <ErrorState message={error} />}
       <ul>

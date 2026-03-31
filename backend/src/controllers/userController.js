@@ -1,17 +1,30 @@
 import mongoose from "mongoose";
 import User from "../models/User.js";
 import ApiError from "../utils/ApiError.js";
+import { parseBooleanQuery, parsePagination, sanitizeText } from "../utils/request.js";
 
 export async function listUsers(req, res, next) {
   try {
     const { role, isBlocked } = req.query;
+    const { page, limit, skip } = parsePagination(req.query);
     const filter = {};
 
     if (role) filter.role = role;
-    if (typeof isBlocked !== "undefined") filter.isBlocked = isBlocked === "true";
+    if (typeof isBlocked !== "undefined") filter.isBlocked = parseBooleanQuery(isBlocked);
 
-    const users = await User.find(filter).select("-password").sort({ createdAt: -1 });
-    return res.status(200).json(users);
+    const [items, total] = await Promise.all([
+      User.find(filter).select("-password").sort({ createdAt: -1 }).skip(skip).limit(limit),
+      User.countDocuments(filter)
+    ]);
+    return res.status(200).json({
+      items,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit) || 1
+      }
+    });
   } catch (error) {
     return next(error);
   }
@@ -44,7 +57,7 @@ export async function updateUser(req, res, next) {
 
     const { name, role } = req.body;
     const update = {};
-    if (typeof name !== "undefined") update.name = name;
+    if (typeof name !== "undefined") update.name = sanitizeText(name, { maxLen: 100 });
     if (typeof role !== "undefined") update.role = role;
 
     const user = await User.findByIdAndUpdate(id, update, {

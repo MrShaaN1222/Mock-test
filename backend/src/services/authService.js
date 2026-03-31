@@ -2,6 +2,7 @@ import jwt from "jsonwebtoken";
 import User from "../models/User.js";
 import env from "../config/env.js";
 import ApiError from "../utils/ApiError.js";
+import { sanitizeText } from "../utils/request.js";
 
 function signAccessToken(user) {
   return jwt.sign({ sub: user._id.toString(), role: user.role, email: user.email }, env.jwtAccessSecret, {
@@ -26,7 +27,7 @@ function toPublicUser(user) {
 }
 
 export async function register(payload) {
-  const name = payload?.name?.trim();
+  const name = sanitizeText(payload?.name, { maxLen: 100 });
   const email = payload?.email?.trim()?.toLowerCase();
   const password = payload?.password;
 

@@ -45,7 +45,7 @@ export default function ExamManager() {
       if (filters.isPublished !== "") params.set("isPublished", filters.isPublished);
       const query = params.toString() ? `?${params.toString()}` : "";
       const data = await apiClient.get(`/admin/exams${query}`, withAuth(accessToken));
-      setExams(data || []);
+      setExams(data.items || data || []);
       setStatus("succeeded");
     } catch (err) {
       setError(err.message || "Failed to load exams");

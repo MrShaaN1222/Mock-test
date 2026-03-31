@@ -11,6 +11,7 @@ import UserManager from "../pages/admin/UserManager";
 import ExamInstructions from "../pages/student/ExamInstructions";
 import ExamPage from "../pages/student/ExamPage";
 import ResultPage from "../pages/student/ResultPage";
+import AnalyticsPage from "../pages/student/AnalyticsPage";
 
 export default function AppRouter() {
   return (
@@ -24,6 +25,7 @@ export default function AppRouter() {
           <Route path="/student/exam/:examId/instructions" element={<ExamInstructions />} />
           <Route path="/student/exam/:examId" element={<ExamPage />} />
           <Route path="/student/result" element={<ResultPage />} />
+          <Route path="/student/analytics" element={<AnalyticsPage />} />
         </Route>
       </Route>
 
