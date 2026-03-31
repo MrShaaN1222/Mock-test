@@ -1,3 +1,8 @@
+/**
+ * Seeds sample SSC-style questions. Default run replaces the entire question collection.
+ * Flags: --reset — delete all questions and exit without inserting.
+ * Run: npm run seed:questions | npm run seed:questions:reset
+ */
 import { connectDb, disconnectDb } from "../config/db.js";
 import Question from "../models/Question.js";
 

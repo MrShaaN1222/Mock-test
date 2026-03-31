@@ -15,7 +15,12 @@
     "test": "npm run test --workspaces --if-present",
     "lint": "npm run lint --workspaces --if-present",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "seed": "npm run seed --workspace backend",
+    "seed:admin": "npm run seed:admin --workspace backend",
+    "seed:questions": "npm run seed:questions --workspace backend",
+    "seed:questions:reset": "npm run seed:questions:reset --workspace backend",
+    "seed:reset": "npm run seed:reset --workspace backend"
   },
   "devDependencies": {
     "concurrently": "^9.1.2",

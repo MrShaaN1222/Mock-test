@@ -1,0 +1,14 @@
+# Optional Render Blueprint: New → Blueprint in Render and point at this repo.
+# Configure secrets in the dashboard (never commit): MONGODB_URI, JWT_ACCESS_SECRET,
+# JWT_REFRESH_SECRET, CORS_ORIGIN, optional ADMIN_*.
+services:
+  - type: web
+    name: ssc-cbt-backend
+    runtime: node
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production

@@ -1,55 +1,65 @@
 # Architecture Overview
 
-## Monorepo Layout
+## Monorepo layout
 
-- `backend/`: Express API, authentication, RBAC, exam engine, persistence.
-- `frontend/`: React + Vite app for student and admin workflows.
-- `docs/`: operational and technical documentation.
+- `backend/` — Express API, JWT authentication, RBAC, exam engine, MongoDB persistence.
+- `frontend/` — React + Vite SPA for student and admin workflows.
+- `docs/` — operational and technical documentation (this file, API reference, deployment guide).
+- `render.yaml` — optional Render Blueprint for the API service (no secrets committed).
+- `frontend/vercel.json` — SPA rewrite rules for client-side routing on Vercel.
 
-## Runtime Flow
+## Runtime flow
 
-1. User opens frontend app.
-2. Frontend calls backend REST API via `VITE_API_BASE_URL`.
-3. Backend validates JWT and role permissions.
-4. Backend reads/writes MongoDB using Mongoose models.
-5. Exam attempt state is persisted server-side for resume and deterministic scoring.
+1. The user opens the frontend (static hosting or local dev server).
+2. The SPA calls the backend REST API using `VITE_API_BASE_URL` (must end with `/api`).
+3. The backend validates JWTs and enforces role-based access on protected routes.
+4. Domain data is stored in MongoDB via Mongoose models.
+5. Exam attempts are persisted server-side: randomized questions, option shuffle, snapshot per attempt, deterministic scoring on submit.
 
-## Backend Layers
+## Backend layers
 
 - **Config**
-  - `src/config/env.js` for environment variable loading and validation.
-  - `src/config/db.js` for MongoDB connection lifecycle.
-- **HTTP App**
-  - `src/app.js` sets security middleware (`helmet`, `cors`, `rate-limit`) and API routes.
-  - `src/server.js` bootstraps DB connection and starts listening.
+  - `src/config/env.js` — loads `backend/.env`, validates required variables.
+  - `src/config/db.js` — MongoDB connection lifecycle.
+- **HTTP app**
+  - `src/app.js` — security middleware (`helmet`, `cors`, rate limiting), JSON body limits, request logging, mounted routes under `/api`.
+  - `src/server.js` — connects to MongoDB and listens on `PORT`.
 - **Routing**
-  - `src/routes/*` maps endpoints to controllers, then applies auth and role guards.
+  - `src/routes/*` — maps endpoints to controllers; auth and role middleware where needed.
 - **Controllers**
-  - Handle request parsing and response writing.
+  - Parse requests, validate inputs, return HTTP responses.
 - **Services**
-  - Implement domain logic such as auth and attempt scoring/state transitions.
+  - Auth, attempt lifecycle, scoring, analytics aggregation.
 - **Models**
   - `User`, `Question`, `Exam`, `Attempt` with indexes and schema validation.
 
-## Security and Integrity
+## Security and integrity
 
-- JWT-based stateless auth.
-- Role checks on admin-only routes.
-- Server-authoritative scoring and attempt lifecycle.
-- Rate limiting and secure HTTP headers.
-- Centralized error handling for consistent API failures.
+- Stateless JWT access tokens; refresh tokens issued at login/register (client storage as implemented in the frontend).
+- Admin-only routes guarded by role middleware.
+- Server-side scoring from attempt snapshot (not client-provided scores).
+- Rate limiting and security headers on the HTTP layer.
+- Centralized error handling for consistent JSON error bodies.
+- Structured logging for requests and handled errors (see `src/middlewares`).
 
-## Frontend Structure
+## Frontend structure
 
-- Redux Toolkit for auth and exam runtime state.
-- Route protection for role-based pages.
-- Student exam UI includes timer, navigation state, save/submit flow.
-- Admin UI includes question/exam/user management.
+- Redux Toolkit for authentication state and exam runtime state.
+- React Router with protected routes by role.
+- Student flow: exam list, instructions, timed exam UI, result view, analytics page.
+- Admin flow: CRUD-style management for questions, exams, and users.
 
-## Deployment Topology
+## Deployment topology
 
-- Frontend deployed on Vercel.
-- Backend deployed on Render or Railway.
-- MongoDB Atlas used as the production database.
+- **Frontend:** Vercel (or any static host with SPA fallback for `index.html`).
+- **Backend:** Render, Railway, or any Node host with a public URL and health checks.
+- **Database:** MongoDB Atlas (recommended for production).
 
-See `docs/deployment.md` for environment and rollout steps.
+## Continuous integration
+
+GitHub Actions (`.github/workflows/ci.yml`) runs on `main` for pushes and pull requests: install, lint, test, and build all workspaces. Use a green CI result before merging or tagging production releases.
+
+## Related documentation
+
+- `docs/deployment.md` — Vercel, Render/Railway, Atlas, env vars, troubleshooting.
+- `docs/api.md` — endpoint reference and pagination shapes.

@@ -1,3 +1,7 @@
+/**
+ * Creates or updates the admin user. Reads ADMIN_NAME, ADMIN_EMAIL, ADMIN_PASSWORD from backend/.env (see .env.example).
+ * Run: npm run seed:admin (from backend) or npm run seed:admin from repo root.
+ */
 import { connectDb, disconnectDb } from "../config/db.js";
 import User from "../models/User.js";
 
