@@ -25,6 +25,9 @@ module.exports = {
         ecmaFeatures: {
           jsx: true
         }
+      },
+      rules: {
+        "no-unused-vars": "off"
       }
     },
     {

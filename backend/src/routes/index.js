@@ -3,13 +3,15 @@ import authRouter from "./authRoutes.js";
 import questionRouter from "./questionRoutes.js";
 import examRouter from "./examRoutes.js";
 import userRouter from "./userRoutes.js";
+import attemptRouter from "./attemptRoutes.js";
 
 const router = Router();
 
 router.use("/auth", authRouter);
 router.use("/questions", questionRouter);
-router.use("/exams", examRouter);
+router.use("/admin/exams", examRouter);
 router.use("/users", userRouter);
+router.use("/", attemptRouter);
 
 router.get("/health", (_req, res) => {
   res.status(200).json({

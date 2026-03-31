@@ -1,8 +1,9 @@
 import ReactDOM from "react-dom/client";
+import AppProviders from "./app/providers";
+import AppRouter from "./routes/AppRouter";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
-  <main style={{ fontFamily: "Arial, sans-serif", padding: "24px" }}>
-    <h1>SSC CBT Platform</h1>
-    <p>Frontend foundation is ready.</p>
-  </main>
+  <AppProviders>
+    <AppRouter />
+  </AppProviders>
 );
