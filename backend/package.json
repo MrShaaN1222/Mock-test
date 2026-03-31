@@ -9,7 +9,12 @@
     "start": "node src/server.js",
     "build": "echo \"No backend build step required\"",
     "test": "node --test",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "seed:admin": "node src/seeds/admin.seed.js",
+    "seed:questions": "node src/seeds/questions.seed.js",
+    "seed:questions:reset": "node src/seeds/questions.seed.js --reset",
+    "seed": "npm run seed:admin && npm run seed:questions",
+    "seed:reset": "npm run seed:questions:reset"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
