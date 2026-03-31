@@ -11,7 +11,6 @@ router.use("/auth", authRouter);
 router.use("/questions", questionRouter);
 router.use("/admin/exams", examRouter);
 router.use("/users", userRouter);
-router.use("/", attemptRouter);
 
 router.get("/health", (_req, res) => {
   res.status(200).json({
@@ -26,5 +25,7 @@ router.get("/", (_req, res) => {
     message: "SSC CBT API root"
   });
 });
+
+router.use("/", attemptRouter);
 
 export default router;
