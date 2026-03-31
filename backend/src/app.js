@@ -10,9 +10,30 @@ import { requestLogger } from "./middlewares/loggerMiddleware.js";
 const app = express();
 
 app.use(helmet());
+const configuredOrigins = (env.corsOrigin || "")
+  .split(",")
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+
+function isAllowedDevOrigin(origin) {
+  return /^http:\/\/(localhost|127\.0\.0\.1):\d+$/i.test(origin);
+}
+
 app.use(
   cors({
-    origin: env.corsOrigin,
+    origin(origin, callback) {
+      if (!origin) {
+        callback(null, true);
+        return;
+      }
+
+      if (configuredOrigins.includes(origin) || isAllowedDevOrigin(origin)) {
+        callback(null, true);
+        return;
+      }
+
+      callback(new Error("Not allowed by CORS"));
+    },
     credentials: true
   })
 );
